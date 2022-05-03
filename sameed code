@@ -1,0 +1,112 @@
+class Solution:
+    def longestCommonPrefix(self, strs: List[str]) -> str:
+        # Get lengths of all strings in the list and get the minimum
+        # since common prefix can't be longer than the shortest string.
+        # Catch ValueError if list is empty
+        try:
+            min_len = min(len(i) for i in strs)
+        except ValueError:
+            return ''
+
+        # split strings into sets character-wise
+        foo = [set(list(zip(*strs))[k]) for k in range(min_len)]
+
+        # Now go through the resulting list and check whether resulting sets have length of 1
+        # If true then add those characters to the prefix list. Break as soon as encounter
+        # a set of length > 1.
+        prefix = []
+        for i in foo:
+            if len(i) == 1:
+                x, = i
+                prefix.append(x)
+            else:
+                break
+        common_prefix = ''.join(prefix)
+        return common_prefix
+        
+        
+        def heap_permutation(data, n):
+    if n == 1:
+        print(data)
+        return
+    
+    for i in range(n):
+        heap_permutation(data, n - 1)
+        if n % 2 == 0:
+            data[i], data[n-1] = data[n-1], data[i]
+        else:
+            data[0], data[n-1] = data[n-1], data[0]
+    
+if __name__ == '__main__':
+    data = [1, 2, 3]
+    heap_permutation(data, len(data))
+    
+    //b2
+    
+    import numpy as np
+import pickle
+from pathlib import Path
+
+# Path to the unzipped CIFAR data
+data_dir = Path("data/cifar-10-batches-py/")
+
+# Unpickle function provided by the CIFAR hosts
+def unpickle(file):
+    with open(file, "rb") as fo:
+        dict = pickle.load(fo, encoding="bytes")
+    return dict
+
+images, labels = [], []
+for batch in data_dir.glob("data_batch_*"):
+    batch_data = unpickle(batch)
+    for i, flat_im in enumerate(batch_data[b"data"]):
+        im_channels = []
+        # Each image is flattened, with channels in order of R, G, B
+        for j in range(3):
+            im_channels.append(
+                flat_im[j * 1024 : (j + 1) * 1024].reshape((32, 32))
+            )
+        # Reconstruct the original image
+        images.append(np.dstack((im_channels)))
+        # Save the label
+        labels.append(batch_data[b"labels"][i])
+
+print("Loaded CIFAR-10 training set:")
+print(f" - np.shape(images)     {np.shape(images)}")
+print(f" - np.shape(labels)     {np.shape(labels)}")
+
+//b3
+
+from PIL import Image
+import csv
+
+def store_single_disk(image, image_id, label):
+    """ Stores a single image as a .png file on disk.
+        Parameters:
+        ---------------
+        image       image array, (32, 32, 3) to be stored
+        image_id    integer unique ID for image
+        label       image label
+    """
+    Image.fromarray(image).save(disk_dir / f"{image_id}.png")
+
+    with open(disk_dir / f"{image_id}.csv", "wt") as csvfile:
+        writer = csv.writer(
+            csvfile, delimiter=" ", quotechar="|", quoting=csv.QUOTE_MINIMAL
+        )
+        writer.writerow([label])
+        class CIFAR_Image:
+    def __init__(self, image, label):
+        # Dimensions of image for reconstruction - not really necessary 
+        # for this dataset, but some datasets may include images of 
+        # varying sizes
+        self.channels = image.shape[2]
+        self.size = image.shape[:2]
+
+        self.image = image.tobytes()
+        self.label = label
+
+    def get_image(self):
+        """ Returns the image as a numpy array. """
+        image = np.frombuffer(self.image, dtype=np.uint8)
+        return image.reshape(*self.size, self.channels)
